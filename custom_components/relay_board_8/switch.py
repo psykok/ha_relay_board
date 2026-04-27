@@ -22,10 +22,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up switch entities from a config entry."""
     coordinator: RelayBoard8Coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(
+    entities = [
         RelayBoard8Switch(coordinator, relay_id)
         for relay_id in range(1, NUM_RELAYS + 1)
-    )
+    ]
+    entities.append(RelayBoard8AllSwitch(coordinator))
+    async_add_entities(entities)
 
 
 class RelayBoard8Switch(CoordinatorEntity[RelayBoard8Coordinator], SwitchEntity):
@@ -62,3 +64,33 @@ class RelayBoard8Switch(CoordinatorEntity[RelayBoard8Coordinator], SwitchEntity)
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the relay off."""
         await self.coordinator.async_turn_relay(self._relay_id, False)
+
+
+class RelayBoard8AllSwitch(CoordinatorEntity[RelayBoard8Coordinator], SwitchEntity):
+    """A switch entity that controls all relays at once."""
+
+    _attr_has_entity_name = True
+
+    def __init__(self, coordinator: RelayBoard8Coordinator) -> None:
+        """Initialize the all-relays switch."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.host}_relay_all"
+        self._attr_name = "All Relays"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, coordinator.host)},
+            name=f"Relay Board ({coordinator.host})",
+            model="8-Channel Relay Board",
+        )
+
+    @property
+    def is_on(self) -> bool:
+        """Return True if all relays are on."""
+        return all(self.coordinator.data.get(i, False) for i in range(1, NUM_RELAYS + 1))
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn all relays on."""
+        await self.coordinator.async_turn_relay(9, True)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn all relays off."""
+        await self.coordinator.async_turn_relay(9, False)
