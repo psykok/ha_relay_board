@@ -1,0 +1,9 @@
+{
+  "domain": "relay_board_8",
+  "name": "8-Channel Relay Board",
+  "codeowners": [],
+  "config_flow": true,
+  "documentation": "https://github.com/kachlera/ha_relay_board",
+  "iot_class": "local_polling",
+  "version": "1.0.0"
+}
