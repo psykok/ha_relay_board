@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN
 from .coordinator import RelayBoard8Coordinator
 
-PLATFORMS = ["switch"]
+PLATFORMS = ["switch", "button"]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
