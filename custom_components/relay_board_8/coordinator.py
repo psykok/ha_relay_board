@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import timedelta
 
 import aiohttp
 from homeassistant.config_entries import ConfigEntry
@@ -11,7 +10,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNA
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER, NUM_RELAYS
+from .const import DOMAIN, LOGGER, NUM_RELAYS
 
 
 class RelayBoard8Coordinator(DataUpdateCoordinator[dict[int, bool]]):
@@ -23,7 +22,7 @@ class RelayBoard8Coordinator(DataUpdateCoordinator[dict[int, bool]]):
             hass,
             LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
+            update_interval=None,
         )
         self.host: str = entry.data[CONF_HOST]
         self.port: int = entry.data[CONF_PORT]
