@@ -5,10 +5,18 @@ from __future__ import annotations
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
+from .const import CONF_PROTOCOL, DOMAIN, PROTOCOL_REST
 from .coordinator import RelayBoard8Coordinator
 
 PLATFORMS = ["switch", "button"]
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate old config entries to new format."""
+    if entry.version == 1:
+        new_data = {**entry.data, CONF_PROTOCOL: PROTOCOL_REST}
+        hass.config_entries.async_update_entry(entry, data=new_data, version=2)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
