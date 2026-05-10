@@ -24,6 +24,29 @@
           "username": "Username",
           "password": "Password"
         }
+      },
+      "reconfigure": {
+        "title": "Reconfigure Relay Board",
+        "description": "Change the connection protocol.",
+        "data": {
+          "protocol": "Protocol"
+        }
+      },
+      "reconfigure_tcp": {
+        "title": "TCP Configuration",
+        "description": "Configure the TCP connection.",
+        "data": {
+          "port": "TCP Port"
+        }
+      },
+      "reconfigure_rest": {
+        "title": "REST Configuration",
+        "description": "Configure the HTTP connection.",
+        "data": {
+          "port": "HTTP Port",
+          "username": "Username",
+          "password": "Password"
+        }
       }
     },
     "error": {
@@ -32,7 +55,8 @@
       "unknown": "An unexpected error occurred."
     },
     "abort": {
-      "already_configured": "This device is already configured."
+      "already_configured": "This device is already configured.",
+      "reconfigure_successful": "Configuration updated successfully."
     }
   }
 }
