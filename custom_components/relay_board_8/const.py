@@ -5,5 +5,13 @@ import logging
 DOMAIN = "relay_board_8"
 LOGGER = logging.getLogger(__package__)
 
-DEFAULT_PORT = 80
 NUM_RELAYS = 8
+
+CONF_PROTOCOL = "protocol"
+PROTOCOL_REST = "rest"
+PROTOCOL_TCP = "tcp"
+
+DEFAULT_REST_PORT = 80
+DEFAULT_TCP_PORT = 1234
+TCP_POLL_INTERVAL = 60
+TCP_POLL_DURATION = 300

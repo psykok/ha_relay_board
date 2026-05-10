@@ -3,10 +3,24 @@
     "step": {
       "user": {
         "title": "8-Channel Relay Board",
-        "description": "Connect to your 8-channel relay board.",
+        "description": "Select the connection protocol for your relay board.",
         "data": {
           "host": "Host",
-          "port": "Port",
+          "protocol": "Protocol"
+        }
+      },
+      "tcp": {
+        "title": "TCP Configuration",
+        "description": "Configure the TCP connection.",
+        "data": {
+          "port": "TCP Port"
+        }
+      },
+      "rest": {
+        "title": "REST Configuration",
+        "description": "Configure the HTTP connection.",
+        "data": {
+          "port": "HTTP Port",
           "username": "Username",
           "password": "Password"
         }
