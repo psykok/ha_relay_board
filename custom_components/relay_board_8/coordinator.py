@@ -3,24 +3,14 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import timedelta
 
 import aiohttp
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.event import async_call_later
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import (
-    CONF_PROTOCOL,
-    DOMAIN,
-    LOGGER,
-    NUM_RELAYS,
-    PROTOCOL_TCP,
-    TCP_POLL_DURATION,
-    TCP_POLL_INTERVAL,
-)
+from .const import CONF_PROTOCOL, DOMAIN, LOGGER, NUM_RELAYS, PROTOCOL_TCP
 
 
 class RelayBoard8Coordinator(DataUpdateCoordinator[dict[int, bool]]):
@@ -34,21 +24,13 @@ class RelayBoard8Coordinator(DataUpdateCoordinator[dict[int, bool]]):
         self.username: str = entry.data.get(CONF_USERNAME, "")
         self.password: str = entry.data.get(CONF_PASSWORD, "")
         self._request_lock = asyncio.Lock()
-        self._poll_unsub: callback | None = None
 
         super().__init__(
             hass,
             LOGGER,
             name=DOMAIN,
-            update_interval=(
-                timedelta(seconds=TCP_POLL_INTERVAL)
-                if self.protocol == PROTOCOL_TCP
-                else None
-            ),
+            update_interval=None,
         )
-
-        if self.protocol == PROTOCOL_TCP:
-            self.update_interval = None
 
         if self.protocol != PROTOCOL_TCP:
             self._base_url = f"http://{self.host}:{self.port}/relay_en.cgi"
@@ -118,7 +100,7 @@ class RelayBoard8Coordinator(DataUpdateCoordinator[dict[int, bool]]):
     # --- Coordinator interface ---
 
     async def _async_update_data(self) -> dict[int, bool]:
-        """Fetch relay states from the device."""
+        """Fetch relay states from the device (initial load only)."""
         async with self._request_lock:
             try:
                 if self.protocol == PROTOCOL_TCP:
@@ -141,9 +123,8 @@ class RelayBoard8Coordinator(DataUpdateCoordinator[dict[int, bool]]):
                 LOGGER.error("Error switching relay %d: %s", relay_id, err)
 
     async def _tcp_turn_relay(self, relay_id: int, turn_on: bool) -> None:
-        """Turn relay via TCP and update state."""
+        """Turn relay via TCP and update state from response."""
         if relay_id == 9:
-            # All relays
             for i in range(1, NUM_RELAYS + 1):
                 cmd = f"L{i}" if turn_on else f"D{i}"
                 await self._tcp_command(cmd)
@@ -155,10 +136,9 @@ class RelayBoard8Coordinator(DataUpdateCoordinator[dict[int, bool]]):
             states[relay_id] = "Relayon" in response
 
         self.async_set_updated_data(states)
-        self._start_polling()
 
     async def _rest_turn_relay(self, relay_id: int, turn_on: bool) -> None:
-        """Turn relay via REST and update state."""
+        """Turn relay via REST and update state from response."""
         if turn_on:
             data = f"saida{relay_id}on=on"
         else:
@@ -166,23 +146,3 @@ class RelayBoard8Coordinator(DataUpdateCoordinator[dict[int, bool]]):
 
         html = await self._rest_request("POST", data)
         self.async_set_updated_data(self._parse_rest_states(html))
-
-    # --- Post-toggle polling (TCP mode) ---
-
-    @callback
-    def _start_polling(self) -> None:
-        """Start temporary polling after a relay toggle."""
-        if self.protocol != PROTOCOL_TCP:
-            return
-        if self._poll_unsub:
-            self._poll_unsub()
-        self.update_interval = timedelta(seconds=TCP_POLL_INTERVAL)
-        self._poll_unsub = async_call_later(
-            self.hass, TCP_POLL_DURATION, self._stop_polling
-        )
-
-    @callback
-    def _stop_polling(self, _now=None) -> None:
-        """Stop temporary polling."""
-        self.update_interval = None
-        self._poll_unsub = None
