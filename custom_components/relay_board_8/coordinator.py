@@ -8,7 +8,7 @@ import aiohttp
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_PROTOCOL, DOMAIN, LOGGER, NUM_RELAYS, PROTOCOL_TCP
 
@@ -52,14 +52,6 @@ class RelayBoard8Coordinator(DataUpdateCoordinator[dict[int, bool]]):
             writer.close()
             await writer.wait_closed()
 
-    async def _tcp_get_all_states(self) -> dict[int, bool]:
-        """Query state of all relays via TCP."""
-        states: dict[int, bool] = {}
-        for i in range(1, NUM_RELAYS + 1):
-            response = await self._tcp_command(f"R{i}")
-            states[i] = "Relayon" in response
-        return states
-
     # --- REST transport ---
 
     async def _rest_request(
@@ -98,18 +90,6 @@ class RelayBoard8Coordinator(DataUpdateCoordinator[dict[int, bool]]):
         return states
 
     # --- Coordinator interface ---
-
-    async def _async_update_data(self) -> dict[int, bool]:
-        """Fetch relay states from the device (initial load only)."""
-        async with self._request_lock:
-            try:
-                if self.protocol == PROTOCOL_TCP:
-                    return await self._tcp_get_all_states()
-                else:
-                    html = await self._rest_request("GET")
-                    return self._parse_rest_states(html)
-            except (aiohttp.ClientError, OSError, asyncio.TimeoutError) as err:
-                raise UpdateFailed(f"Error communicating with device: {err}") from err
 
     async def async_turn_relay(self, relay_id: int, turn_on: bool) -> None:
         """Turn a relay on or off."""

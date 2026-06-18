@@ -5,7 +5,7 @@ from __future__ import annotations
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_PROTOCOL, DOMAIN, PROTOCOL_REST
+from .const import CONF_PROTOCOL, DOMAIN, NUM_RELAYS, PROTOCOL_REST
 from .coordinator import RelayBoard8Coordinator
 
 PLATFORMS = ["switch", "button"]
@@ -22,7 +22,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Relay Board from a config entry."""
     coordinator = RelayBoard8Coordinator(hass, entry)
-    await coordinator.async_config_entry_first_refresh()
+    coordinator.async_set_updated_data(
+        {i: False for i in range(1, NUM_RELAYS + 1)}
+    )
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
